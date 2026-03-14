@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Tale Weaver is an AI-powered story and poem generator that helps users create unique and engaging content.">
+  <meta property="og:title" content="Tale Weaver">
+  <meta property="og:description" content="Tale Weaver is an AI-powered story and poem generator that helps users create unique and engaging content.">
+  <title>Tale Weaver</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a0b; color: #e4e4e7; min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .container { max-width: 800px; width: 100%; padding: 24px; margin: 0 auto; }
+    h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 8px; 
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: #a1a1aa; font-size: 1.1rem; margin-bottom: 32px; }
+    .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px; padding: 24px; margin-bottom: 16px; backdrop-filter: blur(10px); }
+    button { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;
+      border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem;
+      cursor: pointer; transition: all 0.2s; font-weight: 500; }
+    button:hover { transform: scale(1.05); box-shadow: 0 4px 15px rgba(59,130,246,0.4); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    input, textarea, select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
+      color: #e4e4e7; padding: 12px 16px; border-radius: 8px; font-size: 1rem; width: 100%;
+      outline: none; transition: border-color 0.2s; }
+    input:focus, textarea:focus { border-color: #3b82f6; }
+    .footer { margin-top: auto; padding: 24px; text-align: center; color: #52525b; font-size: 0.85rem; }
+    .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%; border-top-color: #3b82f6; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 640px) { .container { padding: 16px; } h1 { font-size: 1.8rem; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Tale Weaver</h1>
+    <p class="subtitle">AI-powered story and poem generator</p>
+  </header>
+  <main class="container">
+    <div class="card">
+      <input id="prompt" type="text" placeholder="Enter your prompt" />
+      <select id="tone">
+        <option value="neutral">Neutral</option>
+        <option value="funny">Funny</option>
+        <option value="serious">Serious</option>
+      </select>
+      <select id="style">
+        <option value="story">Story</option>
+        <option value="poem">Poem</option>
+      </select>
+      <button id="generate" onclick="generateContent()">Generate</button>
+      <div id="loading" class="loading" style="display: none;"></div>
+      <div id="error" style="color: red; display: none;"></div>
+    </div>
+    <div class="card" id="output" style="display: none;">
+      <textarea id="result" readonly></textarea>
+      <button id="save" onclick="saveContent()">Save</button>
+      <button id="share" onclick="shareContent()">Share</button>
+    </div>
+  </main>
+  <footer class="footer">
+    Built with ❤️ by AI App Factory
+  </footer>
+  <script>
+    let userInput = '';
+    let tone = 'neutral';
+    let style = 'story';
+    let result = '';
+
+    async function generateContent() {
+      const generateButton = document.getElementById('generate');
+      generateButton.disabled = true;
+      document.getElementById('loading').style.display = 'inline-block';
+      userInput = document.getElementById('prompt').value;
+      tone = document.getElementById('tone').value;
+      style = document.getElementById('style').value;
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: userInput, tone: tone, style: style })
+        });
+        const data = await response.json();
+        result = data.result;
+        document.getElementById('result').value = result;
+        document.getElementById('output').style.display = 'block';
+        document.getElementById('loading').style.display = 'none';
+        generateButton.disabled = false;
+      } catch (error) {
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('error').innerText = 'Error generating content: ' + error.message;
+        document.getElementById('loading').style.display = 'none';
+        generateButton.disabled = false;
+      }
+    }
+
+    function saveContent() {
+      const resultText = document.getElementById('result').value;
+      const blob = new Blob([resultText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'tale_weaver_result.txt';
+      a.click();
+    }
+
+    function shareContent() {
+      const resultText = document.getElementById('result').value;
+      navigator.clipboard.writeText(resultText).then(() => {
+        alert('Content copied to clipboard!');
+      });
+    }
+  </script>
+</body>
+</html>
